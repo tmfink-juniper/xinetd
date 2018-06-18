@@ -13,9 +13,11 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#ifndef NO_RPC
 #include <rpc/rpc.h>
 #ifdef HAVE_RPCENT_H
 #include <rpc/rpcent.h>
+#endif
 #endif
 #include <netdb.h>
 
@@ -730,7 +732,7 @@ static status_e check_entry( struct service_config *scp,
 	   }
    }
 
-/* #ifndef NO_RPC */
+#ifndef NO_RPC
    if ( SC_IS_RPC( scp ) && !SC_IS_UNLISTED( scp ) )
    {
       struct rpcent *rep = (struct rpcent *)getrpcbyname( SC_NAME(scp) ) ;
@@ -743,6 +745,7 @@ static status_e check_entry( struct service_config *scp,
       SC_RPCDATA( scp )->rd_program_number = rep->r_number ;
    }
    else
+#endif
    {
        if ( !SC_IS_UNLISTED( scp ) ) 
        { 
