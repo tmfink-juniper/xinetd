@@ -37,11 +37,6 @@ AC_CHECK_LIB([m], [log10], [
 	AC_MSG_ERROR([Unable to find working libm.so])
 ])
 AC_SUBST([LIBM_LIBS])
-PKG_CHECK_MODULES([TIRPC],[libtirpc], [
-	AC_DEFINE([HAVE_RPCENT_H], [1], [Have <rpc/rpcent.h>.])
-], [
-	AC_MSG_WARN([Libtirpc not found, will not use <rpc/rpcent.h>])
-])
 
 # ======================================
 # Check for various headers and settings
@@ -110,6 +105,26 @@ AS_IF([test x"$with_labeled_networking" != "xno"], [
             AC_MSG_ERROR([selinux support requested but not found])
         ])
     ])
+])
+
+AC_ARG_WITH([rpc],
+    [AS_HELP_STRING([--without-rpc], [Do not include RPC support])],
+    [with_rpc="$withval"],
+    [with_rpc="auto"]
+)
+AS_IF([test x"$with_rpc" != "xno"], [
+    PKG_CHECK_MODULES([TIRPC],[libtirpc], [
+        AC_DEFINE([HAVE_RPCENT_H], [1], [Have <rpc/rpcent.h>.])
+    ], [
+        AS_IF([test x"$with_rpc" = "xyes"], [
+            AC_MSG_ERROR([RPC support requested but not found])
+        ])
+        with_rpc="no"
+        AC_MSG_WARN([Libtirpc not found, will not use <rpc/rpcent.h>])
+    ])
+])
+AS_IF([test x"$with_rpc" = "xno"], [
+    AC_DEFINE([NO_RPC], [1], [Omit RPC support.])
 ])
 
 # =========
