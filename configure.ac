@@ -100,12 +100,16 @@ AS_IF([test x"$with_libwrap" != "xno"], [
 AC_ARG_WITH([labeled-networking],
     [AS_HELP_STRING([--without-labeled-networking], [Do not use selinux for labeled networking])],
     [with_labeled_networking="$withval"],
-    [with_labeled_networking=yes]
+    [with_labeled_networking="auto"]
 )
 AS_IF([test x"$with_labeled_networking" != "xno"], [
     PKG_CHECK_MODULES([SELINUX],[libselinux], [
         AC_DEFINE([LABELED_NET], [1], [Use selinux for network labeling])
-    ],[])
+    ],[
+        AS_IF([test x"$with_labeled_networking" = "xyes"], [
+            AC_MSG_ERROR([selinux support requested but not found])
+        ])
+    ])
 ])
 
 # =========
