@@ -195,6 +195,7 @@ Build configuration:
 	labeled-networking: ${with_labeled_networking}
 	libwrap:            ${with_libwrap}
 	loadavg:            ${with_loadavg}
+	rpc:                ${with_rpc}
 	HARDEN_CFLAGS:      ${HARDEN_CFLAGS}
 	HARDEN_LDFLAGS:     ${HARDEN_LDFLAGS}
 ==============================================================================
