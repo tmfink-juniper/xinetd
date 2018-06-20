@@ -269,6 +269,7 @@ static void find_bad_fd(void)
                               SVC_ID( sp ) ) ;
                svc_deactivate( sp ) ;
                found = TRUE ;
+               bad_fd_count++ ;
                break ;
             }
          }
@@ -276,6 +277,7 @@ static void find_bad_fd(void)
          {
 #ifdef HAVE_POLL
             ps.rws.pfd_array[fd].events = 0;
+            ps.rws.pfd_array[fd].fd = -1;
 #else
             FD_CLR( fd, &ps.rws.socket_mask ) ;
 #endif

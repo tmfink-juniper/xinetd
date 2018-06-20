@@ -846,6 +846,14 @@ static status_e check_entry( struct service_config *scp,
       }
    }
 
+   if ( SC_SOCKET_TYPE(scp) == SOCK_DGRAM && !SC_WAITS(scp) )
+   {
+         msg( LOG_ERR, func,
+              "Service %s has socket_type dgram, but does not wait",
+              SC_NAME(scp) );
+         return FAILED;
+   }
+
    if ( service_attr_check( scp ) == FAILED )
       return( FAILED ) ;
 
