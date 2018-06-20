@@ -32,9 +32,9 @@ AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 PKG_PROG_PKG_CONFIG([0.20])
 AC_CHECK_LIB([m], [log10], [
-	LIBM_LIBS="-lm"
+    LIBM_LIBS="-lm"
 ], [
-	AC_MSG_ERROR([Unable to find working libm.so])
+    AC_MSG_ERROR([Unable to find working libm.so])
 ])
 AC_SUBST([LIBM_LIBS])
 
@@ -49,21 +49,21 @@ AC_CHECK_FUNC(poll, [AC_DEFINE([HAVE_POLL], [1], [Have available poll function])
 # Switch
 # ======
 AC_ARG_ENABLE(debug,
-	AS_HELP_STRING([--enable-debug], [Build with debug symbols.]),
-	[enable_debug="$enableval"],
-	[enable_debug=no]
+    AS_HELP_STRING([--enable-debug], [Build with debug symbols.]),
+    [enable_debug="$enableval"],
+    [enable_debug=no]
 )
 AS_IF([test "x$enable_debug" != "xno"], [
-	CFLAGS="$CFLAGS -ggdb"
+    CFLAGS="$CFLAGS -ggdb"
 ])
 
 AC_ARG_ENABLE([werror],
-	[AS_HELP_STRING([--enable-werror], [Treat all warnings as errors, useful for development])],
-	[enable_werror="$enableval"],
-	[enable_werror=no]
+    [AS_HELP_STRING([--enable-werror], [Treat all warnings as errors, useful for development])],
+    [enable_werror="$enableval"],
+    [enable_werror=no]
 )
 AS_IF([test x"$enable_werror" != "xno"], [
-	CFLAGS="$CFLAGS -Werror"
+    CFLAGS="$CFLAGS -Werror"
 ])
 CFLAGS="$CFLAGS -Wall -Wextra"
 
@@ -79,17 +79,22 @@ AS_IF([test x"$with_loadavg" != "xno"], [
 AC_ARG_WITH([libwrap],
     [AS_HELP_STRING([--without-libwrap], [Do not use libwrap tcp_wrappers support])],
     [with_libwrap="$withval"],
-    [with_libwrap=yes]
+    [with_libwrap=auto]
 )
 AS_IF([test x"$with_libwrap" != "xno"], [
     AC_CHECK_LIB(wrap, request_init, [
         AC_DEFINE([LIBWRAP], [1], [Have libwrap TCP wrappers present])
         WRAP_LIBS="-lwrap"
+        AC_CHECK_LIB(nsl, yp_get_default_domain, [WRAP_LIBS="$WRAP_LIBS -lnsl" ])
+        AC_SUBST([WRAP_LIBS])
     ],[
-        AC_MSG_ERROR([Missing libwrap from tcp_wrappers])
+        AS_IF([test x"$with_labeled_networking" = "xyes"], [
+            AC_MSG_ERROR([Missing libwrap from tcp_wrappers])
+        ], [
+            with_libwrap="no"
+            AC_MSG_WARN([Not using libwrap from tcp_wrappers])
+        ])
     ])
-    AC_CHECK_LIB(nsl, yp_get_default_domain, [WRAP_LIBS="$WRAP_LIBS -lnsl" ])
-    AC_SUBST([WRAP_LIBS])
 ])
 
 AC_ARG_WITH([labeled-networking],
@@ -103,6 +108,9 @@ AS_IF([test x"$with_labeled_networking" != "xno"], [
     ],[
         AS_IF([test x"$with_labeled_networking" = "xyes"], [
             AC_MSG_ERROR([selinux support requested but not found])
+        ], [
+            with_labeled_networking="no"
+            AC_MSG_WARN([selinux support will not be built in])
         ])
     ])
 ])
@@ -190,13 +198,13 @@ AC_OUTPUT
 AC_MSG_NOTICE([
 ==============================================================================
 Build configuration:
-	debug:              ${enable_debug}
-	werror:             ${enable_werror}
-	labeled-networking: ${with_labeled_networking}
-	libwrap:            ${with_libwrap}
-	loadavg:            ${with_loadavg}
-	rpc:                ${with_rpc}
-	HARDEN_CFLAGS:      ${HARDEN_CFLAGS}
-	HARDEN_LDFLAGS:     ${HARDEN_LDFLAGS}
+    debug:              ${enable_debug}
+    werror:             ${enable_werror}
+    labeled-networking: ${with_labeled_networking}
+    libwrap:            ${with_libwrap}
+    loadavg:            ${with_loadavg}
+    rpc:                ${with_rpc}
+    HARDEN_CFLAGS:      ${HARDEN_CFLAGS}
+    HARDEN_LDFLAGS:     ${HARDEN_LDFLAGS}
 ==============================================================================
 ])
