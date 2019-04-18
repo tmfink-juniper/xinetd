@@ -9,6 +9,8 @@ Documentation=man:xinetd.log
 Type=simple
 ExecStart=/usr/sbin/xinetd -stayalive -dontfork
 ExecReload=/usr/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=2
 
 [Install]
 WantedBy=multi-user.target
