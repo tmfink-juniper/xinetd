@@ -121,15 +121,38 @@ AC_ARG_WITH([rpc],
     [with_rpc="auto"]
 )
 AS_IF([test x"$with_rpc" != "xno"], [
-    PKG_CHECK_MODULES([TIRPC],[libtirpc], [
-        AC_DEFINE([HAVE_RPCENT_H], [1], [Have <rpc/rpcent.h>.])
-    ], [
-        AS_IF([test x"$with_rpc" = "xyes"], [
+    rpc_test="libc libtirpc"
+    AS_CASE(["$with_rpc"],
+	[yes], [],
+	[auto], [rpc_test="$rpc_test no"],
+	[*], [rpc_test="`AS_ECHO(["$with_rpc"]) | tr , ' '`"])
+    AS_FOR([], [rpc_impl], [$rpc_test], [
+        AS_CASE(["$rpc_impl"],
+            [libc], [],
+            [no], [break],
+            [*], [PKG_CHECK_MODULES([RPC], ["$rpc_impl"], [], [continue])])
+        have_rpc=maybe
+        AC_CHECK_HEADERS([rpc/rpc.h],, [have_rpc=no; break])
+        dnl FIXME do a linking test
+        AS_IF([test x"$have_rpc" = xmaybe], [
+            dnl XXX is this header really optional?
+            AC_CHECK_HEADERS([rpc/rpcent.h])
+            have_rpc=yes
+            break
+        ])
+        dnl cleanup variables for next test round
+        AS_UNSET([ac_cv_header_rpc_rpc_h])
+        AS_UNSET([ac_cv_header_rpc_rpcent_h])
+    ])
+    AS_CASE(["$have_rpc:$with_rpc"],
+        [no:no], [],
+        [no:*\ no], [
+            with_rpc=no
+            AC_MSG_WARN([RPC implementation not found])
+        ],
+        [no:*], [
             AC_MSG_ERROR([RPC support requested but not found])
         ])
-        with_rpc="no"
-        AC_MSG_WARN([Libtirpc not found, will not use <rpc/rpcent.h>])
-    ])
 ])
 AS_IF([test x"$with_rpc" = "xno"], [
     AC_DEFINE([NO_RPC], [1], [Omit RPC support.])

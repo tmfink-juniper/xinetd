@@ -15,7 +15,7 @@
 #include <unistd.h>
 #ifndef NO_RPC
 #include <rpc/rpc.h>
-#ifdef HAVE_RPCENT_H
+#ifdef HAVE_RPC_RPCENT_H
 #include <rpc/rpcent.h>
 #endif
 #endif
