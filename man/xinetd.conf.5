@@ -502,15 +502,19 @@ also be specified in the defaults section.
 .TP
 .B cps
 Deprecated in favor of rate_limit.
+
 Limits the rate of incoming connections.  Takes two arguments.
 The first argument is the number of connections per second to handle.
 If the rate of incoming connections is higher than this, the service
 will be temporarily disabled.
-Specifying UNLIMITED will disable rate-limit checks.
+Specifying UNLIMITED will disable rate-limit checks and eliminates the need to
+specify remaining parameters.
 The second argument is the duration to wait before re\-enabling the service
 after it has been disabled.
 The default for this setting is 50 incoming connections and the interval
 is 10 seconds.
+Specifying UNLIMITED as the first option eliminates the need to specify
+remaining parameters.
 .TP
 .B rate_limit
 Limits the rate of incoming connections over a custom interval of time using
@@ -521,9 +525,11 @@ The bucket fills at a constant rate (based on the connection rate) up to a
 maximum amount.
 For each connection attempt, the bucket count decrements by one.
 Once the bucket count goes below zero, the service is disabled temporarily.
+
 Takes four aguments.
 The first argument is the number of connections per interval.
-Specifying UNLIMITED will disable rate-limit checks.
+Specifying UNLIMITED will disable rate-limit checks and eliminates the need to
+specify remaining parameters.
 The second argument is the interval duration.
 The third argument is the length of time to track the history duration (the
 length of time for the bucket to completely refill from empty).
