@@ -301,6 +301,18 @@ access_e parent_access_control( struct service *sp, const connection_s *cp )
       } else {
          time_t time_diff_secs;
          time_diff_secs = nowtime - SC_LB_LAST_CONN_TIME(scp);
+
+         if (time_diff_secs < 0) {
+            /*
+             * We have gone backwards in time (probably due to system clock
+             * change), so just assume that no time has passed since last
+             * connection.
+             */
+            msg( LOG_WARNING, __func__,
+                  "Appear to have gone backwards in time! Assuming diff_secs = 0");
+            time_diff_secs = 0;
+         }
+
          SC_LB_LAST_CONN_TIME(scp) = nowtime;
          msg( LOG_DEBUG, __func__,
                "    start_bucket_count = %f, diff_secs = %lld",
