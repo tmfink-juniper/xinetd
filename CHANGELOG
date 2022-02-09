@@ -946,3 +946,7 @@ This file describes the changes to xinetd. The base version is 2.0.0.
 2.3.15.4
 	Various fixes from gentoo to buildsystem
 	Few tiny tweaks from pullrequests
+2.3.15.5
+	Do not set IPV6_V6ONLY on client-side sockets
+	Do not set server uid if effective user id is not super-user
+	Allow finer configure-time control over RPC backend
