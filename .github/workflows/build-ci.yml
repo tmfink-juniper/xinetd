@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: ./autogen.sh
-    - run: ./configure --without-libwrap --without-labeled-networking --without-loadavg
+    - run: ./configure --disable-silent-rules --without-libwrap --without-labeled-networking --without-loadavg
     - run: make
     - run: make install DESTDIR="${PWD}/root/"
     - run: make distcheck
@@ -40,6 +40,6 @@ jobs:
     - uses: actions/checkout@v2
     - run: brew install autoconf automake libtool
     - run: ./autogen.sh
-    - run: ./configure --without-libwrap --without-labeled-networking --without-loadavg
+    - run: ./configure --disable-silent-rules --without-libwrap --without-labeled-networking --without-loadavg
     - run: make
     - run: make install DESTDIR="${PWD}/root/"
