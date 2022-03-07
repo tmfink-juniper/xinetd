@@ -542,9 +542,13 @@ static status_e service_attr_check( struct service_config *scp )
       return OK ;
 
    /*
-    * Print names of missing attributes
+    * Print names of missing attributes.
+    *
+    * NOTE: Skip attr_id=0 which is A_NONE and will never be shown since its
+    * name is NULL. That avoids useless code execution and avoids confusing
+    * code checkers where M_IS_SET will turn 0 into a shift of -1.
     */
-   for ( attr_id = 0 ; attr_id < SERVICE_ATTRIBUTES ; attr_id++ )
+   for ( attr_id = 1 ; attr_id < SERVICE_ATTRIBUTES ; attr_id++ )
       if ( M_IS_SET( necessary_and_missing, attr_id ) && 
                   ( attr_name = attr_name_lookup( attr_id ) ) != NULL )
       {
