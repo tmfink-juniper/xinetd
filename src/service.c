@@ -156,7 +156,7 @@ static status_e activate_rpc( struct service *sp )
    socklen_t              sin_len = sizeof(tsin);
    unsigned long          vers ;
    struct service_config *scp = SVC_CONF( sp ) ;
-   uint16_t               service_port = SC_PORT( scp ) ;
+   uint16_t               service_port = SC_SPECIFIED( scp, A_PORT ) ? SC_PORT ( scp ) : 0 ;
    struct rpc_data       *rdp = SC_RPCDATA( scp ) ;
    char                  *sid = SC_ID( scp ) ;
    unsigned               registered_versions = 0 ;
@@ -245,7 +245,7 @@ static status_e activate_normal( struct service *sp )
    union xsockaddr         tsin;
    int                     sd             = SVC_FD( sp ) ;
    struct service_config  *scp            = SVC_CONF( sp ) ;
-   uint16_t                service_port   = SC_PORT( scp ) ;
+   uint16_t                service_port   = SC_SPECIFIED( scp, A_PORT ) ? SC_PORT( scp ) : 0 ;
    char                   *sid            = SC_ID( scp ) ;
    const char             *func           = "activate_normal" ;
    unsigned int            sin_len        = sizeof(tsin);
