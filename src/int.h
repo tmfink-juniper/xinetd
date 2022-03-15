@@ -52,6 +52,9 @@ struct intercept_common
 struct intercept_ops
 {
    void (*mux)() ;
+#ifdef __GNUC__
+   __attribute__ ((noreturn))
+#endif
    void (*exit)() ;
 } ;
 

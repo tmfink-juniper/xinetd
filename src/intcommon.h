@@ -8,6 +8,9 @@
 #endif
 #include "int.h"
 
+#ifdef __GNUC__
+__attribute__ ((noreturn))
+#endif
 void int_fail(const struct intercept_s *ip,const char *lsyscall);
 #ifdef HAVE_POLL
 int int_poll(int pfds_last, struct pollfd *pfd_array);
