@@ -792,24 +792,6 @@ int Sdone( int fd )
 }
 
 
-static char *sioexpand( char *area, unsigned old_size, unsigned new_size, int is_static )
-{
-   char *new_area ;
-
-   if ( is_static )
-   {
-      if ( ( new_area = malloc( new_size ) ) == NULL )
-         return( NULL ) ;
-      sio_memcopy( area, new_area, old_size ) ;
-   }
-   else
-      if ( ( new_area = realloc( area, new_size ) ) == NULL )
-         return( NULL ) ;
-      
-   return( new_area ) ;
-}
-
-
 /*
  * Expand the descriptor array (and if we use memory mapping the
  * memory mapping descriptors). We first expand the memory mapping
@@ -820,7 +802,6 @@ static char *sioexpand( char *area, unsigned old_size, unsigned new_size, int is
 int Smorefds(int fd)
 {
    char *p ;
-   int is_static ;
    unsigned new_size, old_size ;
    int n_fds = 4; /* Let's bump 4 at a time for hysteresis */
 
@@ -832,8 +813,7 @@ int Smorefds(int fd)
    old_size = __sio_n_descriptors * sizeof( mapd_s ) ;
    new_size = n_fds * sizeof( mapd_s ) ;
    new_size += old_size;
-   is_static = ( mmap_descriptors == NULL ) ;
-   p = sioexpand( (char *)mmap_descriptors, old_size, new_size, is_static ) ;
+   p = realloc( mmap_descriptors, new_size ) ;
    if ( p == NULL )
       return( SIO_ERR ) ;
    memset(p+old_size, 0, new_size-old_size);
@@ -843,8 +823,7 @@ int Smorefds(int fd)
    old_size = __sio_n_descriptors * sizeof( __sio_descriptor_t ) ;
    new_size = n_fds * sizeof( __sio_descriptor_t ) ;
    new_size += old_size;
-   is_static =  ( __sio_descriptors == NULL ) ;
-   p = sioexpand( (char *)__sio_descriptors, old_size, new_size, is_static ) ;
+   p = realloc( __sio_descriptors, new_size ) ;
    if ( p == NULL )
       return( SIO_ERR ) ;
    memset(p+old_size, 0, new_size-old_size);
