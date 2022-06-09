@@ -64,11 +64,10 @@ const struct name_value access_code_names[] =
 
 
 /* This is called by the flags processor */
-static void cps_service_restart(void)
+static void rate_limit_service_restart(void)
 {
    unsigned int i;
    time_t nowtime;
-   const char *func = "cps_service_restart";
    int rs;
 
    nowtime = time(NULL);
@@ -86,23 +85,12 @@ static void cps_service_restart(void)
             if( svc_activate(sp) == OK ) {
                /* remember running servers after restart */
                SVC_RUNNING_SERVERS(sp) = rs;
-               msg(LOG_ERR, func,
+               msg(LOG_ERR, __func__,
                "Activating service %s", SC_NAME(scp));
             } else {
-               /* Try to restart the service */
-               SVC_ATTEMPTS(sp) += 1;
-               if ( SVC_ATTEMPTS(sp) < MAX_SVC_ATTEMPTS ) {
-                  msg(LOG_ERR, func,
-                  "Error activating service %s, retrying %d more time(s)...",
-                  SC_NAME(scp),
-                  MAX_SVC_ATTEMPTS - SVC_ATTEMPTS(sp));
-                  xtimer_add(cps_service_restart, 1);
-               } else {
-                  /* Give up */
-                  msg(LOG_ERR, func,
-                  "Error activating service %s",
-                  SC_NAME(scp));
-               }
+               msg(LOG_ERR, __func__,
+               "Error activating service %s", 
+               SC_NAME(scp)) ;
             } /* else */
          }
       }
@@ -110,7 +98,7 @@ static void cps_service_restart(void)
 }
 
 
-void cps_service_stop(struct service *sp, const char *reason)
+void rate_limit_service_stop(struct service *sp, const char *reason)
 {
    struct service_config   *scp = SVC_CONF( sp ) ; 
    time_t nowtime;
@@ -121,7 +109,7 @@ void cps_service_stop(struct service *sp, const char *reason)
 	SC_NAME(scp), reason, (int)SC_TIME_WAIT(scp));
    nowtime = time(NULL);
    SC_TIME_REENABLE(scp) = nowtime + SC_TIME_WAIT(scp);
-   xtimer_add(cps_service_restart, SC_TIME_WAIT(scp));
+   xtimer_add(rate_limit_service_restart, SC_TIME_WAIT(scp));
 }
 
 
@@ -297,10 +285,10 @@ access_e parent_access_control( struct service *sp, const connection_s *cp )
       return (AC_OK);
 
    /* Leaky bucket rate-limit handler */
-   if( SC_SPECIFIED( scp, A_RATE_LIMIT ) && SC_TIME_CONN_MAX(scp) != 0 ) {
+   if( !SC_RATE_LIMIT_UNLIMITED(scp) ) {
       nowtime = time(NULL); // seconds
       msg( LOG_DEBUG, __func__,
-            "Enforcing LB limit for service %s: nowtime = %lld",
+            "Enforcing rate-limit for service %s: nowtime = %lld",
             SC_NAME( scp ), (long long) nowtime);
 
       if( SC_LB_LAST_CONN_TIME(scp) == 0 ) {
@@ -308,7 +296,7 @@ access_e parent_access_control( struct service *sp, const connection_s *cp )
          SC_LB_LAST_CONN_TIME(scp) = nowtime;
          SC_LB_BUCKET_COUNT(scp) = SC_LB_INIT_BUCKET_COUNT(scp) - 1;
          msg( LOG_DEBUG, __func__,
-               "    first LB connection: bucket_count = %f",
+               "    first rate-limit connection: bucket_count = %f",
                SC_LB_BUCKET_COUNT(scp));
       } else {
          time_t time_diff_secs;
@@ -334,35 +322,9 @@ access_e parent_access_control( struct service *sp, const connection_s *cp )
 
          if (SC_LB_BUCKET_COUNT(scp) < 0) {
             SC_LB_BUCKET_COUNT(scp) = SC_LB_INIT_BUCKET_COUNT(scp);
-            cps_service_stop(sp, "excessive incoming connections");
+            rate_limit_service_stop(sp, "excessive incoming connections");
             return(AC_CPS);
          }
-      }
-   }
-
-   /* CPS handler */
-   /* Only run CPS logic when rate_limit is not being enforced because
-      even when 'cps' option is not specified, CPS is enforced by default. */
-   if( ! SC_SPECIFIED( scp, A_RATE_LIMIT ) && SC_TIME_CONN_MAX( scp ) != 0 ) {
-      msg( LOG_DEBUG, __func__, "CHECKING CPS");
-      int time_diff;
-      nowtime = time(NULL);
-      time_diff = nowtime - SC_TIME_LIMIT(scp) ;
-
-      if( SC_TIME_CONN(scp) == 0 ) {
-         SC_TIME_CONN(scp)++;
-         SC_TIME_LIMIT(scp) = nowtime;
-      } else if( time_diff < SC_TIME_CONN_MAX(scp) ) {
-         SC_TIME_CONN(scp)++;
-         if( time_diff == 0 ) time_diff = 1;
-         if( SC_TIME_CONN(scp)/time_diff > SC_TIME_CONN_MAX(scp) ) {
-            /* Stop the service; schedule the restart */
-            cps_service_stop(sp, "excessive incoming connections");
-            return(AC_CPS);
-         }
-      } else {
-         SC_TIME_LIMIT(scp) = nowtime;
-         SC_TIME_CONN(scp) = 1;
       }
    }
 
